@@ -70,6 +70,7 @@ public class LexicalAnalyzer {
                     throw new SyntaxError("Undefined Instruction");
                 }
             }
+            addToken(TokenName.KEYWORD, "END");
             
             for(HashMap<TokenName, String> map: tokens){
                 System.out.print(map.keySet());
@@ -219,7 +220,7 @@ public class LexicalAnalyzer {
         Matcher matcher = r.matcher(line);
         flag = matcher.find();
         if (flag) {
-            //addToken("keyword","VAR");
+            addToken(TokenName.KEYWORD,"VAR");
             System.out.println("Next line is the decalaration of variables");
         }
         return flag;
@@ -246,6 +247,7 @@ public class LexicalAnalyzer {
         Matcher matcher = r.matcher(line);
         flag = matcher.find();
         if (flag) {
+            addToken(TokenName.KEYWORD,"BEGIN");
             System.out.println("Start of the program logic.");
         }
         return flag;
