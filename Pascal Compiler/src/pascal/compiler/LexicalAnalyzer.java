@@ -61,18 +61,18 @@ public class LexicalAnalyzer {
                     System.out.println("READ");
 
                 } else if (isWriteMethod(newLine)) {
-                     System.out.println("WRITE");
+                    System.out.println("WRITE");
 
                 } else if (isAssignment(newLine)) {
-                     System.out.println("ASSIGNMENT");
+                    System.out.println("ASSIGNMENT");
 
                 } else {
                     throw new SyntaxError("Undefined Instruction");
                 }
             }
             addToken(TokenName.KEYWORD, "END");
-            
-            for(HashMap<TokenName, String> map: tokens){
+
+            for (HashMap<TokenName, String> map : tokens) {
                 System.out.print(map.keySet());
                 System.out.println(map.values());
             }
@@ -136,6 +136,7 @@ public class LexicalAnalyzer {
                 token += charArray[i];
             }
         }
+        addToken(TokenName.OPERAND, token);
     }
 
     public boolean isReadMethod(String line) {
@@ -144,21 +145,21 @@ public class LexicalAnalyzer {
         Pattern r = Pattern.compile(pattern);
         Matcher matcher = r.matcher(line);
         flag = matcher.find();
-        addToken(TokenName.KEYWORD, "READ");
-        addToken(TokenName.OPENING_BRACKET, "(");
         if (flag) {
+            addToken(TokenName.KEYWORD, "READ");
+            addToken(TokenName.OPENING_BRACKET, "(");
             readArgumentsAndAddTokens(matcher.group(1));
+            addToken(TokenName.CLOSING_BRACKET, ")");
         }
 
-        addToken(TokenName.CLOSING_BRACKET, ")");
         return flag;
     }
 
     private void readArgumentsAndAddTokens(String line) {
-        
+
         String[] methodArguments = line.replaceAll(" ", "").split(",");
         for (String item : methodArguments) {
-            System.out.println("argument: "+item);
+            System.out.println("argument: " + item);
             addToken(TokenName.ARGUMENT, item);
         }
     }
@@ -171,7 +172,7 @@ public class LexicalAnalyzer {
 
     public boolean isAssignment(String line) {
         String pattern1 = "(?i)\\s*([a-zA-Z]\\w*)\\s*:=\\s*(([a-zA-Z]\\w*|\\d+)\\s*([+*]\\s*([a-zA-Z]+\\w*|\\d+)\\s*)+)";
-        String pattern2 = "(?i)\\s*([a-zA-Z]\\w*)\\s*:=\\s*(([a-zA-Z]\\w*|\\d+))\\s*";
+        String pattern2 = "(?i)\\s*([a-zA-Z]\\w*)\\s*:=\\s*([a-zA-Z]\\w*|\\d+)\\s*";
 
         Pattern r1 = Pattern.compile(pattern1);
         Pattern r2 = Pattern.compile(pattern2);
@@ -181,16 +182,16 @@ public class LexicalAnalyzer {
             System.out.println(matcher1.group(1));
             System.out.println(matcher1.group(2));
             addToken(TokenName.DESTINATION, matcher1.group(1));
-            addToken(TokenName.OPERATOR, "=");
+            addToken(TokenName.OPERATOR, ":=");
             tokenizeAssignment(matcher1.group(2));
             return true;
         } else if (matcher2.find()) {
-            System.out.println(matcher1.group(1));
+            System.out.println(matcher2.group(1));
             System.out.println(matcher2.group(2));
-            tokenizeAssignment(matcher2.group(2));
-            for (String item : variables) {
-                addToken(TokenName.ARGUMENT, item);
-            }
+            System.out.println("ANANAAA hennaaaaa");
+            addToken(TokenName.DESTINATION, matcher2.group(1));
+            addToken(TokenName.OPERATOR, ":=");
+            addToken(TokenName.OPERAND, matcher2.group(2));
             return true;
         }
         return false;
@@ -202,13 +203,14 @@ public class LexicalAnalyzer {
         Pattern r = Pattern.compile(pattern);
         Matcher matcher = r.matcher(line);
         flag = matcher.find();
-        addToken(TokenName.KEYWORD, "WRITE");
-        addToken(TokenName.OPENING_BRACKET, "(");
+
         if (flag) {
+            addToken(TokenName.KEYWORD, "WRITE");
+            addToken(TokenName.OPENING_BRACKET, "(");
             readArgumentsAndAddTokens(matcher.group(1));
+            addToken(TokenName.CLOSING_BRACKET, ")");
         }
 
-        addToken(TokenName.CLOSING_BRACKET, ")");
         return flag;
 
     }
@@ -220,7 +222,7 @@ public class LexicalAnalyzer {
         Matcher matcher = r.matcher(line);
         flag = matcher.find();
         if (flag) {
-            addToken(TokenName.KEYWORD,"VAR");
+            addToken(TokenName.KEYWORD, "VAR");
             System.out.println("Next line is the decalaration of variables");
         }
         return flag;
@@ -247,7 +249,7 @@ public class LexicalAnalyzer {
         Matcher matcher = r.matcher(line);
         flag = matcher.find();
         if (flag) {
-            addToken(TokenName.KEYWORD,"BEGIN");
+            addToken(TokenName.KEYWORD, "BEGIN");
             System.out.println("Start of the program logic.");
         }
         return flag;
