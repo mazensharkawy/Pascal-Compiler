@@ -6,8 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,24 +15,14 @@ import java.util.regex.Pattern;
  */
 public class LexicalAnalyzer {
 
-    private ArrayList<HashMap<TokenName, String>> tokens = new ArrayList<>();
-    //private HashSet<String> variablesSet = new HashSet<>();
+   // private ArrayList<HashMap<TOKEN, String>> tokens = new ArrayList<>();
+    private ArrayList<TOKEN> tokenName = new ArrayList<>();
+    private ArrayList<String> tokens = new ArrayList<>();
+
     public String programName;
     public String[] variables;
 
     public String[] writeMethodArguments;
-
-    public enum TokenName {
-        PROGRAM_NAME,
-        IDENTIFIER,
-        OPERAND,
-        DESTINATION,
-        ARGUMENT,
-        OPENING_BRACKET,
-        CLOSING_BRACKET,
-        KEYWORD,
-        OPERATOR;
-    }
 
     public void read(String filePath) throws SyntaxError {
         FileReader fileReader = null;
@@ -70,13 +58,9 @@ public class LexicalAnalyzer {
                     throw new SyntaxError("Undefined Instruction");
                 }
             }
-            addToken(TokenName.KEYWORD, "END");
+            addToken(TOKEN.KEYWORD, "END");
 
-            for (HashMap<TokenName, String> map : tokens) {
-                System.out.print(map.keySet());
-                System.out.println(map.values());
-            }
-            System.out.println(tokens.toString());
+            printTokens();
             reader.close();
         } catch (FileNotFoundException ex) {
         } catch (IOException ex) {
@@ -88,6 +72,20 @@ public class LexicalAnalyzer {
             }
         }
     }
+    private void printTokens(){
+        for(int i =0;i<tokens.size();i++){
+            System.out.print(tokenName.get(i));
+            System.out.print("\t");
+            System.out.println(tokens.get(i));
+        }
+    }
+    
+    public ArrayList<TOKEN> getTokenNameList(){
+        return tokenName;
+    }
+    public ArrayList<String> getTokensList(){
+        return tokens;
+    }
 
     public String getProgramName() {
         return programName;
@@ -95,7 +93,7 @@ public class LexicalAnalyzer {
 
     public void setProgramName(String programName) {
         this.programName = programName;
-        addToken(TokenName.PROGRAM_NAME, programName);
+        addToken(TOKEN.PROGRAM_NAME, programName);
     }
 
     public boolean isStartOfProgram(String line) {
@@ -114,7 +112,7 @@ public class LexicalAnalyzer {
     public void setVariables(String line) {
         variables = line.trim().split("[,\\s+]");
         for (String token : variables) {
-            addToken(TokenName.IDENTIFIER, token);
+            addToken(TOKEN.IDENTIFIER, token);
         }
     }
 
@@ -123,20 +121,30 @@ public class LexicalAnalyzer {
     }
 
     public void tokenizeAssignment(String line) {
+        System.out.println("TOKENIZEEEEEE");
+        System.out.println(line);
         ArrayList<String> tokens = new ArrayList<>();
         String token = "";
         line = line.replaceAll(" ", "");
         char[] charArray = line.toCharArray();
         for (int i = 0; i < charArray.length; i++) {
             if (charArray[i] == '+' || charArray[i] == '*') {
-                addToken(TokenName.OPERAND, token);
-                addToken(TokenName.OPERATOR, String.valueOf(charArray[i]));
+                addToken(TOKEN.OPERAND, token);
+                addToken(TOKEN.OPERATOR, String.valueOf(charArray[i]));
                 token = "";
+            } else if (charArray[i] == '(') {
+                addToken(TOKEN.OPENING_BRACKET, String.valueOf(charArray[i]));
+            } else if (charArray[i] == ')') {
+                addToken(TOKEN.OPERAND, token);
+                token = "";
+                addToken(TOKEN.CLOSING_BRACKET, String.valueOf(charArray[i]));
             } else {
                 token += charArray[i];
             }
         }
-        addToken(TokenName.OPERAND, token);
+        if (token != "") {
+            addToken(TOKEN.OPERAND, token);
+        }
     }
 
     public boolean isReadMethod(String line) {
@@ -146,10 +154,10 @@ public class LexicalAnalyzer {
         Matcher matcher = r.matcher(line);
         flag = matcher.find();
         if (flag) {
-            addToken(TokenName.KEYWORD, "READ");
-            addToken(TokenName.OPENING_BRACKET, "(");
+            addToken(TOKEN.KEYWORD, "READ");
+            addToken(TOKEN.OPENING_BRACKET, "(");
             readArgumentsAndAddTokens(matcher.group(1));
-            addToken(TokenName.CLOSING_BRACKET, ")");
+            addToken(TOKEN.CLOSING_BRACKET, ")");
         }
 
         return flag;
@@ -160,41 +168,61 @@ public class LexicalAnalyzer {
         String[] methodArguments = line.replaceAll(" ", "").split(",");
         for (String item : methodArguments) {
             System.out.println("argument: " + item);
-            addToken(TokenName.ARGUMENT, item);
+            addToken(TOKEN.ARGUMENT, item);
         }
     }
 
-    private void addToken(TokenName key, String token) {
-        HashMap<TokenName, String> map = new HashMap<>();
-        map.put(key, token);
-        tokens.add(map);
+    private void addToken(TOKEN key, String token) {
+        
+        tokenName.add(key);
+        tokens.add(token);
+//        HashMap<TOKEN, String> map = new HashMap<>();
+//        map.put(key, token);
+//        tokens.add(map);
     }
 
     public boolean isAssignment(String line) {
-        String pattern1 = "(?i)\\s*([a-zA-Z]\\w*)\\s*:=\\s*(([a-zA-Z]\\w*|\\d+)\\s*([+*]\\s*([a-zA-Z]+\\w*|\\d+)\\s*)+)";
-        String pattern2 = "(?i)\\s*([a-zA-Z]\\w*)\\s*:=\\s*([a-zA-Z]\\w*|\\d+)\\s*";
+        String pattern1 = "\\s*([a-zA-Z]\\w*)\\s*:=\\s*(\\(?([a-zA-Z]\\w*|\\d+)\\s*([+*]\\s*\\(?([a-zA-Z]+\\w*|\\d+)\\s*\\)?)+)";
+        String pattern2 = "\\s*([a-zA-Z]\\w*)\\s*:=\\s*([a-zA-Z]\\w*|\\d+)\\s*";
 
         Pattern r1 = Pattern.compile(pattern1);
         Pattern r2 = Pattern.compile(pattern2);
         Matcher matcher1 = r1.matcher(line);
         Matcher matcher2 = r2.matcher(line);
-        if (matcher1.find()) {
+        if (matcher1.find() && checkOpenningAndClosingBrackets(line)) {
             System.out.println(matcher1.group(1));
             System.out.println(matcher1.group(2));
-            addToken(TokenName.DESTINATION, matcher1.group(1));
-            addToken(TokenName.OPERATOR, ":=");
+            addToken(TOKEN.DESTINATION, matcher1.group(1));
+            addToken(TOKEN.OPERATOR, ":=");
             tokenizeAssignment(matcher1.group(2));
             return true;
-        } else if (matcher2.find()) {
+        } else if (matcher2.find() && checkOpenningAndClosingBrackets(line)) {
             System.out.println(matcher2.group(1));
             System.out.println(matcher2.group(2));
             System.out.println("ANANAAA hennaaaaa");
-            addToken(TokenName.DESTINATION, matcher2.group(1));
-            addToken(TokenName.OPERATOR, ":=");
-            addToken(TokenName.OPERAND, matcher2.group(2));
+            addToken(TOKEN.DESTINATION, matcher2.group(1));
+            addToken(TOKEN.OPERATOR, ":=");
+            addToken(TOKEN.OPERAND, matcher2.group(2));
             return true;
         }
         return false;
+    }
+
+    private boolean checkOpenningAndClosingBrackets(String line) {
+        char[] charArray = line.toCharArray();
+        int openingBrackets = 0;
+        int closingBrackets = 0;
+        for (char item : charArray) {
+            if (item == '(') {
+                openingBrackets++;
+            } else if (item == ')') {
+                closingBrackets++;
+            }
+        }
+        if (closingBrackets != openingBrackets) {
+            return false;
+        }
+        return true;
     }
 
     public boolean isWriteMethod(String line) {
@@ -205,10 +233,10 @@ public class LexicalAnalyzer {
         flag = matcher.find();
 
         if (flag) {
-            addToken(TokenName.KEYWORD, "WRITE");
-            addToken(TokenName.OPENING_BRACKET, "(");
+            addToken(TOKEN.KEYWORD, "WRITE");
+            addToken(TOKEN.OPENING_BRACKET, "(");
             readArgumentsAndAddTokens(matcher.group(1));
-            addToken(TokenName.CLOSING_BRACKET, ")");
+            addToken(TOKEN.CLOSING_BRACKET, ")");
         }
 
         return flag;
@@ -222,7 +250,7 @@ public class LexicalAnalyzer {
         Matcher matcher = r.matcher(line);
         flag = matcher.find();
         if (flag) {
-            addToken(TokenName.KEYWORD, "VAR");
+            addToken(TOKEN.KEYWORD, "VAR");
             System.out.println("Next line is the decalaration of variables");
         }
         return flag;
@@ -249,7 +277,7 @@ public class LexicalAnalyzer {
         Matcher matcher = r.matcher(line);
         flag = matcher.find();
         if (flag) {
-            addToken(TokenName.KEYWORD, "BEGIN");
+            addToken(TOKEN.KEYWORD, "BEGIN");
             System.out.println("Start of the program logic.");
         }
         return flag;
