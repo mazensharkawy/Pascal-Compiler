@@ -9,7 +9,7 @@ package pascal.compiler;
  *
  * @author ahmed
  */
-public enum TOKEN {
+public enum TOKENTYPE {
     PROGRAM_NAME,
     IDENTIFIER,
     OPERAND,
@@ -18,5 +18,8 @@ public enum TOKEN {
     OPENING_BRACKET,
     CLOSING_BRACKET,
     KEYWORD,
+    END_STMT,
+    STMT,
+    SEPERATOR,
     OPERATOR;
 }
