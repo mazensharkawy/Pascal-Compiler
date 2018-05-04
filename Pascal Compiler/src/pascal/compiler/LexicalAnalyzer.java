@@ -21,10 +21,8 @@ public class LexicalAnalyzer {
     private ArrayList<String> tokens = new ArrayList<>();
     private HashSet<String> identifiers = new HashSet<>();
 
-    public String programName;
-    public String[] variables;
-
-    public String[] writeMethodArguments;
+    private String programName;
+    private String[] variables;
 
     public void read(String filePath) throws SyntaxError {
         FileReader fileReader = null;
@@ -46,15 +44,11 @@ public class LexicalAnalyzer {
             }
 
             while ((newLine = reader.readLine()) != null && !"END".equals(newLine.trim())) {
-                //System.out.println(newLine);
                 if (isReadMethod(newLine)) {
-                    // System.out.println("READ");
 
                 } else if (isWriteMethod(newLine)) {
-                    //System.out.println("WRITE");
 
                 } else if (isAssignment(newLine)) {
-                    //System.out.println("ASSIGNMENT");
 
                 } else {
                     throw new SyntaxError("Undefined Instruction");
@@ -64,13 +58,8 @@ public class LexicalAnalyzer {
 
             printTokens();
             reader.close();
-//            System.out.println("IDENTIFIERS-----------------------------------------------------------");
-//            for (String item : identifiers) {
-//                System.out.println(item);
-//            }
 
-            Parser parser = new Parser(tokenName, tokens, identifiers);
-            parser.init();
+            new Parser(tokenName, tokens, identifiers).init();
         } catch (FileNotFoundException ex) {
         } catch (IOException ex) {
         } finally {
@@ -80,6 +69,14 @@ public class LexicalAnalyzer {
 
             }
         }
+    }
+
+    private void printIdentifiers() {
+        System.out.println("IDENTIFIERS-----------------------------------------------------------");
+        for (String item : identifiers) {
+            System.out.println(item);
+        }
+
     }
 
     private void printTokens() {
@@ -102,7 +99,7 @@ public class LexicalAnalyzer {
         return programName;
     }
 
-    public void setProgramName(String programName) {
+    private void setProgramName(String programName) {
         this.programName = programName;
         addToken(TOKENTYPE.PROGRAM_NAME, programName);
     }
@@ -121,7 +118,7 @@ public class LexicalAnalyzer {
         return flag;
     }
 
-    public void setVariables(String line) {
+    private void setVariables(String line) {
         variables = line.trim().split("[,\\s+]");
 
         identifiers.add(variables[0]);
@@ -133,11 +130,11 @@ public class LexicalAnalyzer {
         }
     }
 
-    public String[] getVariables() {
+    private String[] getVariables() {
         return variables;
     }
 
-    public void tokenizeAssignment(String line) {
+    private void tokenizeAssignment(String line) {
         ArrayList<String> tokens = new ArrayList<>();
         String token = "";
         line = line.replaceAll(" ", "");
@@ -162,7 +159,7 @@ public class LexicalAnalyzer {
         }
     }
 
-    public boolean isReadMethod(String line) {
+    private boolean isReadMethod(String line) {
         boolean flag;
         String pattern = "(?i)\\s*READ\\s*\\((\\s*[a-zA-Z_]\\w*\\s*(,\\s*[a-zA-Z_]\\w*\\s*)*)\\)\\s*;";
         Pattern r = Pattern.compile(pattern);
@@ -196,7 +193,7 @@ public class LexicalAnalyzer {
         tokens.add(token);
     }
 
-    public boolean isAssignment(String line) {
+    private boolean isAssignment(String line) {
         String pattern1 = "\\s*([a-zA-Z]\\w*)\\s*:=\\s*(\\(?([a-zA-Z]\\w*|\\d+)\\s*([+*]\\s*\\(?([a-zA-Z]+\\w*|\\d+)\\s*\\)?)+)\\s*;";
         String pattern2 = "\\s*([a-zA-Z]\\w*)\\s*:=\\s*([a-zA-Z]\\w*|\\d+)\\s*;";
 
@@ -242,7 +239,7 @@ public class LexicalAnalyzer {
         return true;
     }
 
-    public boolean isWriteMethod(String line) {
+    private boolean isWriteMethod(String line) {
         boolean flag;
         String pattern = "(?i)\\s*WRITE\\s*\\((\\s*[a-zA-Z_]\\w*\\s*(,\\s*[a-zA-Z_]\\w*\\s*)*)\\)\\s*;";
         Pattern r = Pattern.compile(pattern);
@@ -261,7 +258,7 @@ public class LexicalAnalyzer {
 
     }
 
-    public boolean isVar(String line) {
+    private boolean isVar(String line) {
         boolean flag;
         String pattern = "(?i)\\s*VAR\\s*";
         Pattern r = Pattern.compile(pattern);
@@ -274,21 +271,21 @@ public class LexicalAnalyzer {
         return flag;
     }
 
-    public boolean isNumber(String line) {
+    private boolean isNumber(String line) {
         String pattern = "(?i)\\d+";
         Pattern r = Pattern.compile(pattern);
         Matcher matcher = r.matcher(line);
         return matcher.find();
     }
 
-    public boolean isidentifier(String line) {
+    private boolean isidentifier(String line) {
         String pattern = "(?i)[_$\\w]+";
         Pattern r = Pattern.compile(pattern);
         Matcher matcher = r.matcher(line);
         return matcher.find();
     }
 
-    public boolean isBegin(String line) {
+    private boolean isBegin(String line) {
         boolean flag;
         String pattern = "(?i)\\s*BEGIN\\s*";
         Pattern r = Pattern.compile(pattern);

@@ -9,7 +9,7 @@ import java.util.HashSet;
  */
 public class Parser {
 
-    private Token token;
+    private final Token token;
 
     public Parser(ArrayList<TOKENTYPE> tokenName, ArrayList<String> tokens, HashSet<String> identifiers) {
         token = new Token(tokenName, tokens, identifiers);
@@ -17,7 +17,9 @@ public class Parser {
 
     public void init() {
         if ("PROGRAM".equals(token.getCurrentToken()) && token.getNextTokenType() == TOKENTYPE.PROGRAM_NAME && "VAR".equals(token.getNextToken())) {
+            CodeGenerator.generateStartOfProgram(token.peakPreviousToken());
             checkIdList();
+            CodeGenerator.generateIdList();
         } else {
             return;
         }
@@ -28,10 +30,12 @@ public class Parser {
 
     private void checkIdList() {
         if (token.getNextTokenType() == TOKENTYPE.IDENTIFIER && token.getNextTokenType() == TOKENTYPE.SEPERATOR) {
+            CodeGenerator.addToListCount(token.peakPreviousToken());
             checkIdList();
             return;
         }
         if (token.getPreviousTokenType() == TOKENTYPE.IDENTIFIER) {
+            CodeGenerator.addToListCount(token.getCurrentToken());
             return;
         }
     }
@@ -39,7 +43,7 @@ public class Parser {
     private void checkStmt() {
 
         if ("END".equals(token.getNextToken())) {
-            System.out.println("END-----------------------------------------END");
+            CodeGenerator.generateEndOfProgram();
             return;
         }
         if (token.getCurrentTokenType()== TOKENTYPE.END_STMT) {
@@ -62,24 +66,29 @@ public class Parser {
 
     private void checkRead() {
         if ("READ".equals(token.getCurrentToken()) && token.getNextTokenType() == TOKENTYPE.OPENING_BRACKET) {
+            CodeGenerator.readSubRoutine();
             checkIdList();
         }
         if (token.getNextTokenType() == TOKENTYPE.CLOSING_BRACKET) {
+            CodeGenerator.generateIdListForMethod();
             return;
         }
     }
 
     private void checkWrite() {
-        if ("Write".equals(token.getCurrentToken()) && token.getNextTokenType() == TOKENTYPE.OPENING_BRACKET) {
+        if ("WRITE".equals(token.getCurrentToken()) && token.getNextTokenType() == TOKENTYPE.OPENING_BRACKET) {
+            CodeGenerator.writeSubRoutine();
             checkIdList();
         }
         if (token.getNextTokenType() == TOKENTYPE.CLOSING_BRACKET) {
+            CodeGenerator.generateIdListForMethod();
             return;
         }
     }
 
     private void checkAssign() {
-        if (token.getNextTokenType() == TOKENTYPE.IDENTIFIER && token.getNextToken() == ":=") {
+        if (token.getNextTokenType() == TOKENTYPE.IDENTIFIER && ":=".equals(token.getNextToken())) {
+            CodeGenerator.loadDestination(token.peakPreviousToken());
             checkExp();
         }
     }
@@ -101,4 +110,5 @@ public class Parser {
             return;
         }
     }
+    
 }
