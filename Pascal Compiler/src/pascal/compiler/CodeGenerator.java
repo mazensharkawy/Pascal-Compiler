@@ -9,7 +9,7 @@ import java.util.Stack;
  */
 public class CodeGenerator {
 
-    private static String RegisterA;
+    private static String RegisterA = "";
     private static ArrayList<String> listCount = new ArrayList<>();
     private static String destination;
     private static ArrayList<String> expArray = new ArrayList<>();
@@ -61,9 +61,20 @@ public class CodeGenerator {
     public static void generateMulExpression(String term1, int index) {
         System.out.println("\tMUL\t" + term1);
         if (expArray.size() > index + 1 && ("+".equals(expArray.get(index + 1)) || "*".equals(expArray.get(index + 1)))) {
+
             return;
         }
         generateDestination();
+
+    }
+
+    public static boolean generateMulExpressionWithTemp(String term1, int index) {
+        System.out.println("\tMUL\t" + term1);
+        if (expArray.size() > index + 2 && "*".equals(expArray.get(index + 1))) {
+            return true;
+        }
+        System.out.println("\tADD\tTEMP1");
+        return false;
 
     }
 
@@ -95,13 +106,36 @@ public class CodeGenerator {
     }
 
     public static void generateExpressionCode() {
+        String previousOperand = "*";
+        boolean flag = false;
+
         System.out.println("\tLDA\t" + expArray.get(0));
         for (int i = 1; i < expArray.size(); i++) {
-            if ("+".equals(expArray.get(i))) {
+
+            if (flag) {
+                previousOperand = "*";
+                flag = generateMulExpressionWithTemp(expArray.get(++i), i);
+            } else if (expArray.size() > i + 2 && "*".equals(previousOperand) && "+".equals(expArray.get(i)) && "*".equals(expArray.get(i + 2))) {
+                previousOperand = "*";
+                flag = true;
+                System.out.println("\tSTA\tTEMP1");
+                System.out.println("\tLDA\t" + expArray.get(++i));
+                //generateMulExpressionWithTemp(expArray.get(++i), i);
+                flag = true;
+
+            } else if ("+".equals(expArray.get(i))) {
+                flag = false;
+                previousOperand = "+";
                 generateAddExpression(expArray.get(++i), i);
+            } else if ("*".equals(expArray.get(i)) && "+".equals(previousOperand)) {
+                flag = false;
+                generateMulExpressionWithTemp(expArray.get(++i), i);
             } else if ("*".equals(expArray.get(i))) {
+                flag = false;
+                previousOperand = "*";
                 generateMulExpression(expArray.get(++i), i);
             } else {
+                flag = false;
                 loadRegisterA(destination);
             }
         }
@@ -116,35 +150,62 @@ public class CodeGenerator {
         listCount.add(id);
     }
 
-    public static void setDestination(String var) {
-        destination = var;
+    public static void changeExpArrayPriority() {
+        printExpArray();
+        expArray = shiftMultiplication();
+        printExpArray();
     }
 
+    private static ArrayList<String> shiftMultiplication() {
 
-    public static void changeExpArrayPriority() {
+        ArrayList<String> newList = new ArrayList<>();
+
         for (int i = 0; i < expArray.size(); i++) {
 
-            if ("+".equals(expArray.get(i))) {
-                checkForMult(i);
-            }
-        }
-    }
-
-    private static void checkForMult(int index) {
-        for (int i = index; i < expArray.size(); i++) {
             if ("*".equals(expArray.get(i))) {
-                swap(index - 1, i - 1);
-                swap(index, i);
-                swap(index + 1, i + 1);
+
+                if (newList.size() > 0 && !"*".equals(newList.get(newList.size() - 1)) && !"+".equals(expArray.get(i - 1)) && !"#".equals(expArray.get(i - 1))) {
+                    newList.add("+");
+                }
+                if (!"+".equals(expArray.get(i - 1)) && !"#".equals(expArray.get(i - 1))) {
+                    newList.add(expArray.get(i - 1));
+                }
+
+                newList.add(expArray.get(i));
+                newList.add(expArray.get(i + 1));
+
+                expArray.set(i - 1, "#");
+                expArray.set(i, "#");
+                expArray.set(i + 1, "#");
+
             }
         }
-        //printExpArray();
+        if (newList.size() > 0 && !"+".equals(getFirstEncounter())) {
+            newList.add("+");
+        }
+        for (int i = 0; i < expArray.size(); i++) {
+
+            if (!"#".equals(expArray.get(i))) {
+                if ("+".equals(expArray.get(i)) && "+".equals(newList.get(newList.size() - 1))) {
+                } else {
+                    newList.add(expArray.get(i));
+                }
+            }
+        }
+        if ("+".equals(newList.get(newList.size() - 1))) {
+            newList.remove(newList.size() - 1);
+        }
+
+        return newList;
     }
 
-    private static void swap(int firstIndex, int secondIndex) {
-        String temp = expArray.get(firstIndex);
-        expArray.set(firstIndex, expArray.get(secondIndex));
-        expArray.set(secondIndex, temp);
+    private static String getFirstEncounter() {
+        for (int i = 0; i < expArray.size(); i++) {
+            if (!"#".equals(expArray.get(i))) {
+                return expArray.get(i);
+            }
+        }
+        return "#";
     }
 
 }
