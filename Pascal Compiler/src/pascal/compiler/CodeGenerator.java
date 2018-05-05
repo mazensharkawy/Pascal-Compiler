@@ -1,7 +1,6 @@
 package pascal.compiler;
 
 import java.util.ArrayList;
-import java.util.Stack;
 
 /**
  *
@@ -112,19 +111,16 @@ public class CodeGenerator {
         if (isOneElementAssignment()) {
             oneElement = true;
         }
-        System.out.println("\tLDA\t" + expArray.get(0));
-        for (int i = 1; i < expArray.size(); i++) {
 
+        loadFirstOperand(expArray.get(0));
+        for (int i = 1; i < expArray.size(); i++) {
             if (recurse) {
                 previousOperand = "*";
                 recurse = generateMulExpressionWithTemp(expArray.get(++i), i);
             } else if (expArray.size() > i + 2 && "*".equals(previousOperand) && "+".equals(expArray.get(i)) && "*".equals(expArray.get(i + 2))) {
                 previousOperand = "*";
+                storeInTempAndLoadNextA(expArray.get(++i));
                 recurse = true;
-                System.out.println("\tSTA\tTEMP1");
-                System.out.println("\tLDA\t" + expArray.get(++i));
-                recurse = true;
-
             } else if ("+".equals(expArray.get(i))) {
                 recurse = false;
                 previousOperand = "+";
@@ -151,6 +147,15 @@ public class CodeGenerator {
         listCount.clear();
     }
 
+    private static void loadFirstOperand(String token) {
+        System.out.println("\tLDA\t" + token);
+    }
+
+    private static void storeInTempAndLoadNextA(String token) {
+        System.out.println("\tSTA\tTEMP1");
+        System.out.println("\tLDA\t" + token);
+    }
+
     private static boolean isOneElementAssignment() {
         return expArray.size() == 1;
     }
@@ -170,23 +175,19 @@ public class CodeGenerator {
         ArrayList<String> newList = new ArrayList<>();
 
         for (int i = 0; i < expArray.size(); i++) {
-
             if ("*".equals(expArray.get(i))) {
-
                 if (newList.size() > 0 && !"*".equals(newList.get(newList.size() - 1)) && !"+".equals(expArray.get(i - 1)) && !"#".equals(expArray.get(i - 1))) {
                     newList.add("+");
                 }
                 if (!"+".equals(expArray.get(i - 1)) && !"#".equals(expArray.get(i - 1))) {
                     newList.add(expArray.get(i - 1));
                 }
-
                 newList.add(expArray.get(i));
                 newList.add(expArray.get(i + 1));
 
                 expArray.set(i - 1, "#");
                 expArray.set(i, "#");
                 expArray.set(i + 1, "#");
-
             }
         }
         if (newList.size() > 0 && !"+".equals(getFirstEncounter())) {
@@ -204,7 +205,6 @@ public class CodeGenerator {
         if ("+".equals(newList.get(newList.size() - 1))) {
             newList.remove(newList.size() - 1);
         }
-
         return newList;
     }
 

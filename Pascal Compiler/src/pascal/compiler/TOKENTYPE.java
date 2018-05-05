@@ -7,9 +7,6 @@ package pascal.compiler;
 public enum TOKENTYPE {
     PROGRAM_NAME,
     IDENTIFIER,
-    OPERAND,
-    DESTINATION,
-    ARGUMENT,
     OPENING_BRACKET,
     CLOSING_BRACKET,
     KEYWORD,

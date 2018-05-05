@@ -16,7 +16,6 @@ import java.util.regex.Pattern;
  */
 public class LexicalAnalyzer {
 
-    // private ArrayList<HashMap<TOKENTYPE, String>> tokens = new ArrayList<>();
     private ArrayList<TOKENTYPE> tokenName = new ArrayList<>();
     private ArrayList<String> tokens = new ArrayList<>();
     private HashSet<String> identifiers = new HashSet<>();
@@ -72,7 +71,7 @@ public class LexicalAnalyzer {
     }
 
     private void printIdentifiers() {
-        System.out.println("IDENTIFIERS-----------------------------------------------------------");
+        System.out.println("IDENTIFIERS");
         for (String item : identifiers) {
             System.out.println(item);
         }
@@ -85,6 +84,8 @@ public class LexicalAnalyzer {
 
             System.out.println(tokens.get(i));
         }
+        System.out.println("-----------------------------------");
+        System.out.println("");
     }
 
     public ArrayList<TOKENTYPE> getTokenNameList() {
@@ -106,7 +107,7 @@ public class LexicalAnalyzer {
 
     public boolean isStartOfProgram(String line) {
         boolean flag;
-        String pattern = "(?i)\\s*PROGRAM\\s+(\\w+)\\s*";
+        String pattern = "(?i)\\s*PROGRAM\\s+([a-zA-Z_]\\w*)\\s*";
         Pattern r = Pattern.compile(pattern);
         Matcher matcher = r.matcher(line);
         flag = matcher.find();
@@ -162,7 +163,7 @@ public class LexicalAnalyzer {
                 token += charArray[i];
             }
         }
-        if (token != "") {
+        if (!"".equals(token)) {
             if (isNumber(token)) {
                 token = "#" + token;
             }
@@ -188,7 +189,6 @@ public class LexicalAnalyzer {
     }
 
     private void readArgumentsAndAddTokens(String line) {
-
         String[] methodArguments = line.replaceAll(" ", "").split(",");
         addToken(TOKENTYPE.IDENTIFIER, methodArguments[0]);
         for (int i = 1; i < methodArguments.length; i++) {
@@ -199,14 +199,13 @@ public class LexicalAnalyzer {
     }
 
     private void addToken(TOKENTYPE key, String token) {
-
         tokenName.add(key);
         tokens.add(token);
     }
 
     private boolean isAssignment(String line) {
-        String pattern1 = "\\s*([a-zA-Z]\\w*)\\s*:=\\s*(\\(?([a-zA-Z]\\w*|\\d+)\\s*([+*]\\s*\\(?([a-zA-Z]+\\w*|\\d+)\\s*\\)?)+)\\s*;";
-        String pattern2 = "\\s*([a-zA-Z]\\w*)\\s*:=\\s*([a-zA-Z]\\w*|\\d+)\\s*;";
+        String pattern1 = "\\s*([a-zA-Z_]\\w*)\\s*:=\\s*(\\(?([a-zA-Z_]\\w*|\\d+)\\s*([+*]\\s*\\(?([a-zA-Z_]+\\w*|\\d+)\\s*\\)?)+)\\s*;";
+        String pattern2 = "\\s*([a-zA-Z_]\\w*)\\s*:=\\s*([a-zA-Z_]\\w*|\\d+)\\s*;";
 
         Pattern r1 = Pattern.compile(pattern1);
         Pattern r2 = Pattern.compile(pattern2);
@@ -244,10 +243,7 @@ public class LexicalAnalyzer {
                 closingBrackets++;
             }
         }
-        if (closingBrackets != openingBrackets) {
-            return false;
-        }
-        return true;
+        return closingBrackets == openingBrackets;
     }
 
     private boolean isWriteMethod(String line) {
