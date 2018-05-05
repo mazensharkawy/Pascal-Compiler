@@ -107,37 +107,42 @@ public class CodeGenerator {
 
     public static void generateExpressionCode() {
         String previousOperand = "*";
-        boolean flag = false;
-
+        boolean recurse = false;
+        boolean oneElement = false;
+        if (isOneElementAssignment()) {
+            oneElement = true;
+        }
         System.out.println("\tLDA\t" + expArray.get(0));
         for (int i = 1; i < expArray.size(); i++) {
 
-            if (flag) {
+            if (recurse) {
                 previousOperand = "*";
-                flag = generateMulExpressionWithTemp(expArray.get(++i), i);
+                recurse = generateMulExpressionWithTemp(expArray.get(++i), i);
             } else if (expArray.size() > i + 2 && "*".equals(previousOperand) && "+".equals(expArray.get(i)) && "*".equals(expArray.get(i + 2))) {
                 previousOperand = "*";
-                flag = true;
+                recurse = true;
                 System.out.println("\tSTA\tTEMP1");
                 System.out.println("\tLDA\t" + expArray.get(++i));
-                //generateMulExpressionWithTemp(expArray.get(++i), i);
-                flag = true;
+                recurse = true;
 
             } else if ("+".equals(expArray.get(i))) {
-                flag = false;
+                recurse = false;
                 previousOperand = "+";
                 generateAddExpression(expArray.get(++i), i);
             } else if ("*".equals(expArray.get(i)) && "+".equals(previousOperand)) {
-                flag = false;
+                recurse = false;
                 generateMulExpressionWithTemp(expArray.get(++i), i);
             } else if ("*".equals(expArray.get(i))) {
-                flag = false;
+                recurse = false;
                 previousOperand = "*";
                 generateMulExpression(expArray.get(++i), i);
             } else {
-                flag = false;
+                recurse = false;
                 loadRegisterA(destination);
             }
+        }
+        if (oneElement) {
+            generateDestination();
         }
         expArray.clear();
     }
@@ -146,14 +151,18 @@ public class CodeGenerator {
         listCount.clear();
     }
 
+    private static boolean isOneElementAssignment() {
+        return expArray.size() == 1;
+    }
+
     public static void addToListCount(String id) {
         listCount.add(id);
     }
 
     public static void changeExpArrayPriority() {
-        printExpArray();
+        //printExpArray();
         expArray = shiftMultiplication();
-        printExpArray();
+        //printExpArray();
     }
 
     private static ArrayList<String> shiftMultiplication() {

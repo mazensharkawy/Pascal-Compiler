@@ -12,7 +12,7 @@ public class Compiler {
      */
     public static void main(String[] args) throws SyntaxError {
         LexicalAnalyzer program = new LexicalAnalyzer();
-        program.read("PascalCode3.txt");
+        program.read("PascalCode2.txt");
     }
     
 }
