@@ -126,6 +126,7 @@ public class LexicalAnalyzer {
         for (int i = 1; i < variables.length; i++) {
             addToken(TOKENTYPE.SEPERATOR, ",");
             addToken(TOKENTYPE.IDENTIFIER, variables[i]);
+            identifiers.add(variables[i]);
 
         }
     }
@@ -141,12 +142,19 @@ public class LexicalAnalyzer {
         char[] charArray = line.toCharArray();
         for (int i = 0; i < charArray.length; i++) {
             if (charArray[i] == '+' || charArray[i] == '*') {
+                if (isNumber(token)) {
+                    token = "#" + token;
+                }
                 addToken(TOKENTYPE.IDENTIFIER, token);
                 addToken(TOKENTYPE.OPERATOR, String.valueOf(charArray[i]));
                 token = "";
             } else if (charArray[i] == '(') {
                 addToken(TOKENTYPE.OPENING_BRACKET, String.valueOf(charArray[i]));
             } else if (charArray[i] == ')') {
+                if (isNumber(token)) {
+                    token = "#" + token;
+                }
+
                 addToken(TOKENTYPE.IDENTIFIER, token);
                 token = "";
                 addToken(TOKENTYPE.CLOSING_BRACKET, String.valueOf(charArray[i]));
@@ -155,6 +163,9 @@ public class LexicalAnalyzer {
             }
         }
         if (token != "") {
+            if (isNumber(token)) {
+                token = "#" + token;
+            }
             addToken(TOKENTYPE.IDENTIFIER, token);
         }
     }
@@ -202,20 +213,20 @@ public class LexicalAnalyzer {
         Matcher matcher1 = r1.matcher(line);
         Matcher matcher2 = r2.matcher(line);
         if (matcher1.find() && checkOpenningAndClosingBrackets(line)) {
-//            System.out.println(matcher1.group(1));
-//            System.out.println(matcher1.group(2));
-            addToken(TOKENTYPE.STMT, matcher1.group(1));
+            addToken(TOKENTYPE.IDENTIFIER, matcher1.group(1));
             addToken(TOKENTYPE.OPERATOR, ":=");
             tokenizeAssignment(matcher1.group(2));
             addToken(TOKENTYPE.END_STMT, ";");
             return true;
         } else if (matcher2.find() && checkOpenningAndClosingBrackets(line)) {
-//            System.out.println(matcher2.group(1));
-//            System.out.println(matcher2.group(2));
-//            System.out.println("ANANAAA hennaaaaa");
-            addToken(TOKENTYPE.STMT, matcher2.group(1));
+            String token = "";
+            addToken(TOKENTYPE.IDENTIFIER, matcher2.group(1));
             addToken(TOKENTYPE.OPERATOR, ":=");
-            addToken(TOKENTYPE.IDENTIFIER, matcher2.group(2));
+            token = matcher2.group(2);
+            if (isNumber(matcher2.group(2))) {
+                token = "#" + token;
+            }
+            addToken(TOKENTYPE.IDENTIFIER, token);
             addToken(TOKENTYPE.END_STMT, ";");
             return true;
         }
@@ -272,7 +283,7 @@ public class LexicalAnalyzer {
     }
 
     private boolean isNumber(String line) {
-        String pattern = "(?i)\\d+";
+        String pattern = "\\d+";
         Pattern r = Pattern.compile(pattern);
         Matcher matcher = r.matcher(line);
         return matcher.find();

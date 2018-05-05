@@ -1,6 +1,7 @@
 package pascal.compiler;
 
 import java.util.ArrayList;
+import java.util.Stack;
 
 /**
  *
@@ -11,16 +12,16 @@ public class CodeGenerator {
     private static String RegisterA;
     private static ArrayList<String> listCount = new ArrayList<>();
     private static String destination;
-    private static int locationCounter = 0;
+    private static ArrayList<String> expArray = new ArrayList<>();
 
     public static void loadRegisterA(String firstOperand) {
         if (RegisterA.equals(firstOperand)) {
             return;
         }
         RegisterA = firstOperand;
-        System.out.println("\tLDA\t" + firstOperand);
+        System.out.println("\tLDA\t" + RegisterA);
     }
-    
+
     public static void loadDestination(String destinationValue) {
         destination = destinationValue;
     }
@@ -44,6 +45,36 @@ public class CodeGenerator {
         clearListCount();
     }
 
+    public static void addToExpArray(String token) {
+        expArray.add(token);
+    }
+
+    public static void printExpArray() {
+        System.out.println("EXPRESSION ARRAY");
+        for (String item : expArray) {
+            System.out.print(item);
+            System.out.print("  ");
+        }
+        System.out.println("");
+    }
+
+    public static void generateMulExpression(String term1, int index) {
+        System.out.println("\tMUL\t" + term1);
+        if (expArray.size() > index + 1 && ("+".equals(expArray.get(index + 1)) || "*".equals(expArray.get(index + 1)))) {
+            return;
+        }
+        generateDestination();
+
+    }
+
+    public static void generateAddExpression(String term1, int index) {
+        System.out.println("\tADD\t" + term1);
+        if (expArray.size() > index + 1 && ("+".equals(expArray.get(index + 1)) || "*".equals(expArray.get(index + 1)))) {
+            return;
+        }
+        generateDestination();
+    }
+
     public static void generateStartOfProgram(String programName) {
         System.out.println(programName + "\tSTART\t0");
         System.out.println("\tEXTREF\tXWRITE, XREAD");
@@ -63,6 +94,20 @@ public class CodeGenerator {
         clearListCount();
     }
 
+    public static void generateExpressionCode() {
+        System.out.println("\tLDA\t" + expArray.get(0));
+        for (int i = 1; i < expArray.size(); i++) {
+            if ("+".equals(expArray.get(i))) {
+                generateAddExpression(expArray.get(++i), i);
+            } else if ("*".equals(expArray.get(i))) {
+                generateMulExpression(expArray.get(++i), i);
+            } else {
+                loadRegisterA(destination);
+            }
+        }
+        expArray.clear();
+    }
+
     private static void clearListCount() {
         listCount.clear();
     }
@@ -75,8 +120,31 @@ public class CodeGenerator {
         destination = var;
     }
 
-    public void addToLocationCounter(int value) {
-        locationCounter += value;
+
+    public static void changeExpArrayPriority() {
+        for (int i = 0; i < expArray.size(); i++) {
+
+            if ("+".equals(expArray.get(i))) {
+                checkForMult(i);
+            }
+        }
+    }
+
+    private static void checkForMult(int index) {
+        for (int i = index; i < expArray.size(); i++) {
+            if ("*".equals(expArray.get(i))) {
+                swap(index - 1, i - 1);
+                swap(index, i);
+                swap(index + 1, i + 1);
+            }
+        }
+        //printExpArray();
+    }
+
+    private static void swap(int firstIndex, int secondIndex) {
+        String temp = expArray.get(firstIndex);
+        expArray.set(firstIndex, expArray.get(secondIndex));
+        expArray.set(secondIndex, temp);
     }
 
 }

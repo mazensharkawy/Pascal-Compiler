@@ -6,6 +6,6 @@ BEGIN
 	A := X+B;
 	C := X+ Z;
 	C := C * B;
-	Z := A+B+(C + Y);
+	Z := A+B+C*Y;
 	WRITE(A,C,Z);
 END

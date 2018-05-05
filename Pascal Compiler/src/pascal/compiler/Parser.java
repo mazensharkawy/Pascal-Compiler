@@ -46,7 +46,7 @@ public class Parser {
             CodeGenerator.generateEndOfProgram();
             return;
         }
-        if (token.getCurrentTokenType()== TOKENTYPE.END_STMT) {
+        if (token.getCurrentTokenType() == TOKENTYPE.END_STMT) {
             checkStmt();
             return;
         }
@@ -59,7 +59,8 @@ public class Parser {
         } else if (token.isDefinedIdentifier(token.getCurrentToken())) {
             checkAssign();
             checkStmt();
-        }else{
+        } else {
+            System.out.println("else");
             checkStmt();
         }
     }
@@ -87,7 +88,7 @@ public class Parser {
     }
 
     private void checkAssign() {
-        if (token.getNextTokenType() == TOKENTYPE.IDENTIFIER && ":=".equals(token.getNextToken())) {
+        if (token.getCurrentTokenType() == TOKENTYPE.IDENTIFIER && ":=".equals(token.getNextToken())) {
             CodeGenerator.loadDestination(token.peakPreviousToken());
             checkExp();
         }
@@ -103,12 +104,17 @@ public class Parser {
 
     private void checkFactor() {
         if (token.getNextTokenType() == TOKENTYPE.IDENTIFIER && token.getNextTokenType() == TOKENTYPE.OPERATOR) {
+            CodeGenerator.addToExpArray(token.peakPreviousToken());
+            CodeGenerator.addToExpArray(token.getCurrentToken());
             checkExp();
             return;
         }
         if (token.getPreviousTokenType() == TOKENTYPE.IDENTIFIER) {
+            CodeGenerator.addToExpArray(token.getCurrentToken());
+            CodeGenerator.changeExpArrayPriority();
+            CodeGenerator.generateExpressionCode();
             return;
         }
     }
-    
+
 }
