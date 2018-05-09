@@ -1,6 +1,13 @@
 package pascal.compiler;
 
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -8,57 +15,78 @@ import java.util.ArrayList;
  */
 public class CodeGenerator {
 
-    private static String RegisterA = "";
-    private static ArrayList<String> listCount = new ArrayList<>();
-    private static String destination;
-    private static ArrayList<String> expArray = new ArrayList<>();
+    private String RegisterA = "";
+    private ArrayList<String> listCount = new ArrayList<>();
+    private String destination;
+    private ArrayList<String> expArray = new ArrayList<>();
+    private FileWriter filewriter;
+    private BufferedWriter writer;
 
-    public static void loadRegisterA(String firstOperand) {
+    public CodeGenerator() {
+        String fileName = Compiler.fileName.substring(0, Compiler.fileName.length()-4);
+        try {
+            filewriter = new FileWriter(fileName + "Assembly.txt");
+        } catch (IOException ex) {
+            Logger.getLogger(CodeGenerator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        writer = new BufferedWriter(filewriter);
+    }
+
+    public void loadRegisterA(String firstOperand) throws IOException {
         if (RegisterA.equals(firstOperand)) {
             return;
         }
         RegisterA = firstOperand;
-        System.out.println("\tLDA\t" + RegisterA);
+
+        writer.write("\tLDA\t" + RegisterA);
+        writer.newLine();
     }
 
-    public static void loadDestination(String destinationValue) {
+    public void loadDestination(String destinationValue) {
         destination = destinationValue;
     }
 
-    public static void generateDestination() {
-        System.out.println("\tSTA\t" + destination);
+    public void generateDestination() throws IOException {
+        writer.write("\tSTA\t" + destination);
+        writer.newLine();
     }
 
-    public static void readSubRoutine() {
-        System.out.println("\t+SUB\tREADX");
+    public void readSubRoutine() throws IOException {
+        writer.write("\t+SUB\tREADX");
+        writer.newLine();
     }
 
-    public static void writeSubRoutine() {
-        System.out.println("\t+SUB\tWRITEX");
+    public void writeSubRoutine() throws IOException {
+        writer.write("\t+SUB\tWRITEX");
+        writer.newLine();
     }
 
-    public static void generateIdListForMethod() {
+    public void generateIdListForMethod() throws IOException {
         for (String item : listCount) {
-            System.out.println("\tWORD\t" + item);
+            writer.write("\tWORD\t" + item);
+            writer.newLine();
         }
         clearListCount();
     }
 
-    public static void addToExpArray(String token) {
+    public void addToExpArray(String token) {
         expArray.add(token);
     }
 
-    public static void printExpArray() {
+    public void printExpArray() throws IOException {
         System.out.println("EXPRESSION ARRAY");
+        writer.newLine();
         for (String item : expArray) {
             System.out.print(item);
             System.out.print("  ");
         }
+
         System.out.println("");
     }
 
-    public static void generateMulExpression(String term1, int index) {
-        System.out.println("\tMUL\t" + term1);
+    public void generateMulExpression(String term1, int index) throws IOException {
+        writer.write("\tMUL\t" + term1);
+        writer.newLine();
         if (expArray.size() > index + 1 && ("+".equals(expArray.get(index + 1)) || "*".equals(expArray.get(index + 1)))) {
 
             return;
@@ -67,44 +95,55 @@ public class CodeGenerator {
 
     }
 
-    public static boolean generateMulExpressionWithTemp(String term1, int index) {
-        System.out.println("\tMUL\t" + term1);
+    public boolean generateMulExpressionWithTemp(String term1, int index) throws IOException {
+        writer.write("\tMUL\t" + term1);
+        writer.newLine();
         if (expArray.size() > index + 2 && "*".equals(expArray.get(index + 1))) {
             return true;
         }
-        System.out.println("\tADD\tTEMP1");
+        writer.write("\tADD\tTEMP1");
+        writer.newLine();
         return false;
 
     }
 
-    public static void generateAddExpression(String term1, int index) {
-        System.out.println("\tADD\t" + term1);
+    public void generateAddExpression(String term1, int index) throws IOException {
+        writer.write("\tADD\t" + term1);
+        writer.newLine();
         if (expArray.size() > index + 1 && ("+".equals(expArray.get(index + 1)) || "*".equals(expArray.get(index + 1)))) {
             return;
         }
         generateDestination();
     }
 
-    public static void generateStartOfProgram(String programName) {
-        System.out.println(programName + "\tSTART\t0");
-        System.out.println("\tEXTREF\tXWRITE, XREAD");
-        System.out.println("\tSTL\tRETADR");
+    public void generateStartOfProgram(String programName) throws IOException {
+        writer.write(programName + "\tSTART\t0");
+        writer.newLine();
+        writer.write("\tEXTREF\tXWRITE, XREAD");
+        writer.newLine();
+        writer.write("\tSTL\tRETADR");
+        writer.newLine();
 
     }
 
-    public static void generateEndOfProgram() {
-        System.out.println("\tLDL\tRETADR");
-        System.out.println("\tRSUB");
+    public void generateEndOfProgram() throws IOException {
+        writer.write("\tLDL\tRETADR");
+        writer.newLine();
+        writer.write("\tRSUB");
+        writer.newLine();
+        writer.flush();
+        writer.close();
     }
 
-    public static void generateIdList() {
+    public void generateIdList() throws IOException {
         for (String item : listCount) {
-            System.out.println(item + "\tRESW\t1");
+            writer.write(item + "\tRESW\t1");
+            writer.newLine();
         }
         clearListCount();
     }
 
-    public static void generateExpressionCode() {
+    public void generateExpressionCode() throws IOException {
         String previousOperand = "*";
         boolean recurse = false;
         boolean oneElement = false;
@@ -143,34 +182,37 @@ public class CodeGenerator {
         expArray.clear();
     }
 
-    private static void clearListCount() {
+    private void clearListCount() {
         listCount.clear();
     }
 
-    private static void loadFirstOperand(String token) {
-        System.out.println("\tLDA\t" + token);
+    private void loadFirstOperand(String token) throws IOException {
+        writer.write("\tLDA\t" + token);
+        writer.newLine();
     }
 
-    private static void storeInTempAndLoadNextA(String token) {
-        System.out.println("\tSTA\tTEMP1");
-        System.out.println("\tLDA\t" + token);
+    private void storeInTempAndLoadNextA(String token) throws IOException {
+        writer.write("\tSTA\tTEMP1");
+        writer.newLine();
+        writer.write("\tLDA\t" + token);
+        writer.newLine();
     }
 
-    private static boolean isOneElementAssignment() {
+    private boolean isOneElementAssignment() {
         return expArray.size() == 1;
     }
 
-    public static void addToListCount(String id) {
+    public void addToListCount(String id) {
         listCount.add(id);
     }
 
-    public static void changeExpArrayPriority() {
+    public void changeExpArrayPriority() {
         //printExpArray();
         expArray = shiftMultiplication();
         //printExpArray();
     }
 
-    private static ArrayList<String> shiftMultiplication() {
+    private ArrayList<String> shiftMultiplication() {
 
         ArrayList<String> newList = new ArrayList<>();
 
@@ -208,7 +250,7 @@ public class CodeGenerator {
         return newList;
     }
 
-    private static String getFirstEncounter() {
+    private String getFirstEncounter() {
         for (int i = 0; i < expArray.size(); i++) {
             if (!"#".equals(expArray.get(i))) {
                 return expArray.get(i);

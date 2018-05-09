@@ -1,5 +1,6 @@
 package pascal.compiler;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -10,16 +11,17 @@ import java.util.HashSet;
 public class Parser {
 
     private final Token token;
+    private CodeGenerator codeGenerator = new CodeGenerator();
 
     public Parser(ArrayList<TOKENTYPE> tokenName, ArrayList<String> tokens, HashSet<String> identifiers) {
         token = new Token(tokenName, tokens, identifiers);
     }
 
-    public void init() {
+    public void init() throws IOException {
         if ("PROGRAM".equals(token.getCurrentToken()) && token.getNextTokenType() == TOKENTYPE.PROGRAM_NAME && "VAR".equals(token.getNextToken())) {
-            CodeGenerator.generateStartOfProgram(token.peakPreviousToken());
+            codeGenerator.generateStartOfProgram(token.peakPreviousToken());
             checkIdList();
-            CodeGenerator.generateIdList();
+            codeGenerator.generateIdList();
         } else {
             return;
         }
@@ -30,20 +32,20 @@ public class Parser {
 
     private void checkIdList() {
         if (token.getNextTokenType() == TOKENTYPE.IDENTIFIER && token.getNextTokenType() == TOKENTYPE.SEPERATOR) {
-            CodeGenerator.addToListCount(token.peakPreviousToken());
+            codeGenerator.addToListCount(token.peakPreviousToken());
             checkIdList();
             return;
         }
         if (token.getPreviousTokenType() == TOKENTYPE.IDENTIFIER) {
-            CodeGenerator.addToListCount(token.getCurrentToken());
+            codeGenerator.addToListCount(token.getCurrentToken());
             return;
         }
     }
 
-    private void checkStmt() {
+    private void checkStmt() throws IOException {
 
         if ("END".equals(token.getNextToken())) {
-            CodeGenerator.generateEndOfProgram();
+            codeGenerator.generateEndOfProgram();
             return;
         }
         if (token.getCurrentTokenType() == TOKENTYPE.END_STMT) {
@@ -65,36 +67,36 @@ public class Parser {
         }
     }
 
-    private void checkRead() {
+    private void checkRead() throws IOException {
         if ("READ".equals(token.getCurrentToken()) && token.getNextTokenType() == TOKENTYPE.OPENING_BRACKET) {
-            CodeGenerator.readSubRoutine();
+            codeGenerator.readSubRoutine();
             checkIdList();
         }
         if (token.getNextTokenType() == TOKENTYPE.CLOSING_BRACKET) {
-            CodeGenerator.generateIdListForMethod();
+            codeGenerator.generateIdListForMethod();
             return;
         }
     }
 
-    private void checkWrite() {
+    private void checkWrite() throws IOException {
         if ("WRITE".equals(token.getCurrentToken()) && token.getNextTokenType() == TOKENTYPE.OPENING_BRACKET) {
-            CodeGenerator.writeSubRoutine();
+            codeGenerator.writeSubRoutine();
             checkIdList();
         }
         if (token.getNextTokenType() == TOKENTYPE.CLOSING_BRACKET) {
-            CodeGenerator.generateIdListForMethod();
+            codeGenerator.generateIdListForMethod();
             return;
         }
     }
 
-    private void checkAssign() {
+    private void checkAssign() throws IOException {
         if (token.getCurrentTokenType() == TOKENTYPE.IDENTIFIER && ":=".equals(token.getNextToken())) {
-            CodeGenerator.loadDestination(token.peakPreviousToken());
+            codeGenerator.loadDestination(token.peakPreviousToken());
             checkExp();
         }
     }
 
-    private void checkExp() {
+    private void checkExp() throws IOException {
         checkFactor();
         if (token.getCurrentTokenType() == TOKENTYPE.OPERATOR) {
             checkFactor();
@@ -102,17 +104,17 @@ public class Parser {
         }
     }
 
-    private void checkFactor() {
+    private void checkFactor() throws IOException {
         if (token.getNextTokenType() == TOKENTYPE.IDENTIFIER && token.getNextTokenType() == TOKENTYPE.OPERATOR) {
-            CodeGenerator.addToExpArray(token.peakPreviousToken());
-            CodeGenerator.addToExpArray(token.getCurrentToken());
+            codeGenerator.addToExpArray(token.peakPreviousToken());
+            codeGenerator.addToExpArray(token.getCurrentToken());
             checkExp();
             return;
         }
         if (token.getPreviousTokenType() == TOKENTYPE.IDENTIFIER) {
-            CodeGenerator.addToExpArray(token.getCurrentToken());
-            CodeGenerator.changeExpArrayPriority();
-            CodeGenerator.generateExpressionCode();
+            codeGenerator.addToExpArray(token.getCurrentToken());
+            codeGenerator.changeExpArrayPriority();
+            codeGenerator.generateExpressionCode();
             return;
         }
     }

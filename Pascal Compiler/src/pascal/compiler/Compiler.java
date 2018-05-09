@@ -1,5 +1,7 @@
 package pascal.compiler;
 
+import java.util.Scanner;
+
 /**
  *
  * @author ahmed
@@ -7,12 +9,16 @@ package pascal.compiler;
 public class Compiler {
 
     /**
-     * @param args the command line arguments
      * @throws pascal.compiler.SyntaxError
      */
+    public static String fileName;
+
     public static void main(String[] args) throws SyntaxError {
         LexicalAnalyzer program = new LexicalAnalyzer();
-        program.read("PascalCode2.txt");
+        //Scanner input = new Scanner(System.in);
+        //fileName = input.nextLine();
+        fileName = "PascalCode3.txt";
+        program.read();
     }
-    
+
 }

@@ -22,11 +22,12 @@ public class LexicalAnalyzer {
 
     private String programName;
     private String[] variables;
+        
 
-    public void read(String filePath) throws SyntaxError {
+    public void read() throws SyntaxError {
         FileReader fileReader = null;
         try {
-            File file = new File(filePath);
+            File file = new File(Compiler.fileName);
             fileReader = new FileReader(file);
             BufferedReader reader = new BufferedReader(fileReader);
             String newLine = null;
